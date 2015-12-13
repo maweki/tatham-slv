@@ -9,19 +9,15 @@ import Ersatz
 
 build_runs :: [Int] -> [Bit] -> Bit
 build_runs nums vars = case nums of
-  [] -> not $ any id vars
-  [0] -> not $ any id vars
+  [] -> all not vars
+  [0] -> all not vars
   x:xs -> let max_d = length vars - (length xs + sum xs) - x
               run = [not] ++ replicate x id ++ [not]
               v = [false] ++ vars ++ [false]
           in any id $ for [0..max_d] $ \ d ->
-              (all id $ zipWith id run $ take (x + 2) $ drop d v)
+              (all not $ take d vars)
+              && (all id $ zipWith id run $ take (x + 2) $ drop d v)
               && (build_runs xs $ drop (x + d + 1) vars)
-
-count_correct :: Int -> [Bit] -> Bit
-count_correct cnt vars = case vars of
-    [] -> if cnt == 0 then true else false
-    x:xs -> (x && count_correct (cnt - 1) xs) || (not x && count_correct cnt xs)
 
 main = do
   input <- getContents
@@ -36,11 +32,9 @@ main = do
         vars <- return $ Map.fromList $ zip indices vars'
         let getx x = for [1..sizey] $ \y -> (vars ! (x,y))
             gety y = for [1..sizex] $ \x -> (vars ! (x,y))
-            build = \n v -> build_runs n v && count_correct (sum n) v
-            xs = zipWith build xin (map getx [1..])
-            ys = zipWith build yin (map gety [1..])
-            main_conjunction = (all id xs) && (all id ys)
-        assert (main_conjunction)
+            xs = zipWith build_runs xin (map getx [1..])
+            ys = zipWith build_runs yin (map gety [1..])
+        assert (all id xs && all id ys)
         return vars
 
   putStrLn $ "Size: " ++ show (sizex, sizey)
