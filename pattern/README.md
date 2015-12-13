@@ -1,4 +1,4 @@
-# Pattern/Nongrams
+# Pattern/Nonograms
 
 ## execution
 
