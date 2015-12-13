@@ -9,15 +9,14 @@ import Ersatz
 
 build_runs :: [Int] -> [Bit] -> Bit
 build_runs nums vars = case nums of
-  [] -> true
+  [] -> not $ any id vars
   [0] -> not $ any id vars
-  [x] -> any id $ for [0..(length vars - x)] $ \d -> all id $ take x $ drop d vars
   x:xs -> let max_d = length vars - (length xs + sum xs) - x
               run = [not] ++ replicate x id ++ [not]
               v = [false] ++ vars ++ [false]
           in any id $ for [0..max_d] $ \ d ->
               (all id $ zipWith id run $ take (x + 2) $ drop d v)
-              && (build_runs xs $ drop (x + d) vars)
+              && (build_runs xs $ drop (x + d + 1) vars)
 
 count_correct :: Int -> [Bit] -> Bit
 count_correct cnt vars = case vars of
