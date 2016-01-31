@@ -7,6 +7,8 @@ import qualified Data.Map as Map
 import Control.Monad.State (MonadState)
 import Control.Monad (replicateM, forM_, unless)
 import System.Exit (exitFailure)
+import Text.ParserCombinators.ReadP
+import Data.Maybe
 
 import Ersatz
 
@@ -37,8 +39,11 @@ build_runs nums vars = case nums of
 
 main = do
   input <- getContents
-  let (xin, yin) = read input :: ([[Int]],[[Int]])
-      problem = Problem (length xin, length yin) (xin, yin)
+  let parsed = parse_tat input
+      problem = case parsed of
+        Just p -> p
+        Nothing -> let (xin, yin) = read input :: ([[Int]],[[Int]])
+                   in Problem (length xin, length yin) (xin, yin)
 
   putStrLn $ "Size: " ++ (show $ problem_size problem)
   unless (consistent problem) $ do {putStrLn "Problem inconsitent"; exitFailure}
@@ -63,3 +68,31 @@ nono (Problem (sizex, sizey) (xin, yin)) = do
   return vars
 
 for = flip map
+
+-- PARSER
+parse_tat = listToMaybe . map fst . filter (null .snd) . readP_to_S r_problem
+
+str_to_int :: String -> Int
+str_to_int = read
+
+number' = many1 (choice (map char ['0'..'9']))
+
+r_size :: ReadP PSize
+r_size = do l <- number'
+            char 'x'
+            r <- number'
+            return (str_to_int l, str_to_int r)
+
+r_run :: ReadP [Int]
+r_run = do { li <- sepBy number' (char '.'); return $ map str_to_int li }
+
+r_runs :: ReadP [[Int]]
+r_runs = sepBy r_run (char '/')
+
+r_problem :: ReadP Problem
+r_problem = do size <- r_size
+               char ':'
+               runs <- r_runs
+               skipSpaces
+               eof
+               return $ Problem size (take (fst size) runs, drop (fst size) runs)
