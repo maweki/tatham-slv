@@ -12,6 +12,7 @@ import Data.Maybe
 
 import Ersatz
 
+-- Problem definition
 type PSize = (Int, Int)
 type Run = [[Int]]
 type Runs = (Run, Run)
@@ -24,19 +25,7 @@ consistent :: Problem -> Bool
 consistent (Problem size (xin, yin)) = consistent' size xin P.&& consistent' (swap size) yin
 consistent' (w, h) xs = (w == length xs) P.&& P.all (\x -> (sum x) + (length x - 1) <= h) xs
 
-build_runs :: [Int] -> [Bit] -> Bit
-build_runs nums vars = case nums of
-  [] -> all not vars
-  [0] -> all not vars
-  x:xs -> let max_d = length vars - (length xs + sum xs) - x
-              run = [not] ++ replicate x id ++ [not]
-              v = [false] ++ vars ++ [false]
-          in any id $ for [0..max_d] $ \ d ->
-              (all not $ take d vars)
-              && (all id $ zipWith id run $ take (x + 2) $ drop d v)
-              && (build_runs xs $ drop (x + d + 1) vars)
-
-
+-- MAIN
 main = do
   input <- getContents
   let parsed = parse_tat input
@@ -54,6 +43,19 @@ main = do
       conv  = map $ \((x,y), b)-> if b then 'X' else ' '
       join = foldr (:) ""
   forM_ (map (join . conv) lines) print
+
+-- SAT encoding
+build_runs :: [Int] -> [Bit] -> Bit
+build_runs nums vars = case nums of
+  [] -> all not vars
+  [0] -> all not vars
+  x:xs -> let max_d = length vars - (length xs + sum xs) - x
+              run   = [not] ++ replicate x id ++ [not]
+              v     = [false] ++ vars ++ [false]
+          in any id $ for [0..max_d] $ \ d ->
+             (all not $ take d vars)
+             && (all id $ zipWith id run $ take (x + 2) $ drop d v)
+             && (build_runs xs $ drop (x + d + 1) vars)
 
 nono :: (MonadState s m, HasSAT s) => Problem -> m (Map (Int,Int) Bit)
 nono (Problem (sizex, sizey) (xin, yin)) = do
@@ -90,9 +92,7 @@ r_runs :: ReadP [[Int]]
 r_runs = sepBy r_run (char '/')
 
 r_problem :: ReadP Problem
-r_problem = do size <- r_size
-               char ':'
+r_problem = do size <- r_size; char ':'
                runs <- r_runs
-               skipSpaces
-               eof
+               skipSpaces; eof
                return $ Problem size (take (fst size) runs, drop (fst size) runs)
