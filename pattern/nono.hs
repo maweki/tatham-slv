@@ -1,9 +1,12 @@
 import Data.Traversable    (sequence)
 import Prelude hiding      (sequence,(&&),(||),not,any,all)
+import qualified Prelude as P (all, (&&), not)
 import Data.Map            (Map,(!), toList)
+import Data.Tuple          (swap)
 import qualified Data.Map as Map
 import Control.Monad.State (MonadState)
-import Control.Monad (replicateM, forM_)
+import Control.Monad (replicateM, forM_, unless)
+import System.Exit (exitFailure)
 
 import Ersatz
 
@@ -14,6 +17,10 @@ data Problem = Problem PSize Runs deriving Show
 
 problem_size :: Problem -> PSize
 problem_size (Problem size _) = size
+
+consistent :: Problem -> Bool
+consistent (Problem size (xin, yin)) = consistent' size xin P.&& consistent' (swap size) yin
+consistent' (w, h) xs = (w == length xs) P.&& P.all (\x -> (sum x) + (length x - 1) <= h) xs
 
 build_runs :: [Int] -> [Bit] -> Bit
 build_runs nums vars = case nums of
@@ -34,6 +41,7 @@ main = do
       problem = Problem (length xin, length yin) (xin, yin)
 
   putStrLn $ "Size: " ++ (show $ problem_size problem)
+  unless (consistent problem) $ do {putStrLn "Problem inconsitent"; exitFailure}
 
   (Satisfied, Just solution) <- solveWith minisat (nono problem)
   let sizey = snd $ problem_size problem
