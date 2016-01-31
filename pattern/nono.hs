@@ -74,19 +74,16 @@ for = flip map
 -- PARSER
 parse_tat = listToMaybe . map fst . filter (null .snd) . readP_to_S r_problem
 
-str_to_int :: String -> Int
-str_to_int = read
-
 number' = many1 (choice (map char ['0'..'9']))
 
 r_size :: ReadP PSize
 r_size = do l <- number'
             char 'x'
             r <- number'
-            return (str_to_int l, str_to_int r)
+            return (read l, read r)
 
 r_run :: ReadP [Int]
-r_run = do { li <- sepBy number' (char '.'); return $ map str_to_int li }
+r_run = do { li <- sepBy number' (char '.'); return $ map read li }
 
 r_runs :: ReadP [[Int]]
 r_runs = sepBy r_run (char '/')
