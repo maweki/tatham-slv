@@ -4,3 +4,4 @@ This is (going to be) a collection of solvers for Simon Tatham's puzzle collecti
 
 Done:
 * pattern
+* signpost
