@@ -5,14 +5,19 @@ clauses = []
 def add_clause(*v):
     clauses.append(' '.join(map(str,v)) + ' 0\n')
 
+def sign(x):
+    if x == 0:
+        return 0
+    return -1 if x < 0 else 1
+
 def hits(fro, direction, to):
-    add = lambda a, b: (a[0]+b[0],a[1]+b[1])
-    f = fro
-    for _ in range(100): # bad loop condition but at least terminating
-        f = add(f, direction)
-        if f == to:
-            return True
-    return False
+    dx, dy = direction
+    if dx == 0:
+        return to[0] == fro[0] and dy == sign(to[1] - fro[1])
+    if dy == 0:
+        return to[1] == fro[1] and dx == sign(to[0] - fro[0])
+    _dx, _dy = to[0] - fro[0], to[1] - fro[1]
+    return abs(_dx) == abs(_dy) and sign(_dx) == dx and sign(_dy) == dy
 
 def parse(puzzle_str):
     directions = {
