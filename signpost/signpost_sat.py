@@ -90,8 +90,4 @@ def main():
                 print(str(corr[(c,l)]).rjust(fill), end=" ")
             print("")
 
-
-
-
-
 main()
